@@ -1,0 +1,1 @@
+C:\MyGitHub\CPURayTracing\x64\Release\CPURayTracing.exe

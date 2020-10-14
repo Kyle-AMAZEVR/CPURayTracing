@@ -1,0 +1,8 @@
+﻿  main.cpp
+  TBB Warning: tbb.h contains deprecated functionality. For details, please see Deprecated Features appendix in the TBB reference manual.
+  Generating code
+  50 of 50 functions (100.0%) were compiled.
+    49 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  CPURayTracing.vcxproj -> C:\MyGitHub\CPURayTracing\x64\Release\CPURayTracing.exe
