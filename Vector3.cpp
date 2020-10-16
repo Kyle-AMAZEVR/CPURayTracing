@@ -29,6 +29,15 @@ Vector3& Vector3::operator*=(const float multiplier)
 	return *this;
 }
 
+Vector3& Vector3::operator/=(const float divisor)
+{
+	if(divisor != 0)
+	{
+		this->mData = _mm_div_ps(this->mData, _mm_load_ps1(&divisor));
+	}
+	return *this;
+}
+
 float Vector3::Length() const
 {
 	//const int mask = 0b01110001; // 1110 0001
@@ -45,4 +54,30 @@ float Vector3::SquareLength() const
 void Vector3::Normalize()
 {	
 	mData = _mm_mul_ps(mData, _mm_rsqrt_ps(_mm_dp_ps(mData, mData, 0b01110111)));
+}
+
+Vector3 Vector3::Normalized() const
+{
+	return _mm_mul_ps(mData, _mm_rsqrt_ps(_mm_dp_ps(mData, mData, 0b01110111)));
+}
+
+
+Vector3 operator+(const Vector3& a, const Vector3& b)
+{
+	return _mm_add_ps(a.mData, b.mData);
+}
+
+Vector3 operator-(const Vector3& a, const Vector3& b)
+{
+	return _mm_sub_ps(a.mData, b.mData);
+}
+
+Vector3 operator*(float a, const Vector3& b)
+{
+	return _mm_mul_ps(b.mData, _mm_load_ps1(&a));
+}
+
+Vector3 operator*(const Vector3& b, float a)
+{
+	return _mm_mul_ps(b.mData, _mm_load_ps1(&a));
 }
