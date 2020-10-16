@@ -22,6 +22,7 @@ link_directories("inteltbb/tbb/lib/intel64_win/vc_mt")
 add_executable(CPURayTracing main.cpp Vector3.h Vector3.cpp)
 
 target_link_libraries(CPURayTracing tbb.lib tbbbind.lib tbbmalloc.lib tbbproxy.lib)
+target_compile_definitions(CPURayTracing PRIVATE STB_IMAGE_WRITE_IMPLEMENTATION)
 
 add_custom_command(TARGET CPURayTracing POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/inteltbb/redist/intel64_win/tbb/vc_mt/tbb.dll $<TARGET_FILE_DIR:CPURayTracing>/tbb.dll)
 add_custom_command(TARGET CPURayTracing POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/inteltbb/redist/intel64_win/tbb/vc_mt/tbbbind.dll $<TARGET_FILE_DIR:CPURayTracing>/tbbbind.dll)
