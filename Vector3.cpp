@@ -81,3 +81,17 @@ Vector3 operator*(const Vector3& b, float a)
 {
 	return _mm_mul_ps(b.mData, _mm_load_ps1(&a));
 }
+
+// dot product
+float operator*(const Vector3& a, const Vector3& b)
+{
+	return _mm_cvtss_f32(_mm_dp_ps(a.mData, b.mData, 0b01110111));
+}
+
+
+
+
+const Vector3 Vector3::UnitX{ 1,0,0 };
+const Vector3 Vector3::UnitY{ 0,1,0 };
+const Vector3 Vector3::UnitZ{ 0,0,1 };
+

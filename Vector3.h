@@ -42,17 +42,27 @@ public:
 	friend Vector3 operator-(const Vector3& a, const Vector3& b);
 	friend Vector3 operator*(float a, const Vector3& b);
 	friend Vector3 operator*(const Vector3& b , float a);
+	// dot product
+	friend float operator*(const Vector3& a, const Vector3& b);
 
 	Vector3& operator+=(const Vector3& rhs);
 	Vector3& operator-=(const Vector3& rhs);
 	Vector3& operator*=(const float multiplier);
 	Vector3& operator/=(const float divisor);
-
+	
+	
+	
 	float Length() const;
 	float SquareLength() const;
 
 	void Normalize();
 	Vector3 Normalized() const;
+
+	static const Vector3 UnitX;
+	static const Vector3 UnitY;
+	static const Vector3 UnitZ;
 protected:
 	__m128 mData;
 };
+
+
