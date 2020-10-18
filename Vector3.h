@@ -10,6 +10,7 @@
 class Vector3
 {
 public:
+	Vector3() = default;
 	Vector3(float x, float y, float z);
 	Vector3(float value[4]);
 	Vector3(const __m128& data) : mData(data)
@@ -17,6 +18,8 @@ public:
 
 	Vector3(const Vector3&) = default;
 	Vector3(Vector3&&) = default;
+
+	Vector3& operator=(const Vector3& rhs) = default;
 
 	Vector3(__m128&& data)
 	{
@@ -42,6 +45,7 @@ public:
 	friend Vector3 operator-(const Vector3& a, const Vector3& b);
 	friend Vector3 operator*(float a, const Vector3& b);
 	friend Vector3 operator*(const Vector3& b , float a);
+	friend Vector3 operator/(const Vector3& a, float b);
 	// dot product
 	friend float operator*(const Vector3& a, const Vector3& b);
 

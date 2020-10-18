@@ -88,7 +88,10 @@ float operator*(const Vector3& a, const Vector3& b)
 	return _mm_cvtss_f32(_mm_dp_ps(a.mData, b.mData, 0b01110111));
 }
 
-
+Vector3 operator/(const Vector3& a, float b)
+{
+	return _mm_div_ps(a.mData, _mm_load_ps1(&b));
+}
 
 
 const Vector3 Vector3::UnitX{ 1,0,0 };
