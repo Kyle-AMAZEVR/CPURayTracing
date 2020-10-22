@@ -11,6 +11,7 @@
 #include "Sphere.h"
 #include "stb_image_write.h"
 #include "HitTableList.h"
+#include <chrono>
 
 bool HitSphere(const Vector3& center, float radius, const Ray& r)
 {
@@ -34,7 +35,7 @@ Vector3 Color(const Ray& r)
 	return (1.0f - t) * Vector3(1, 1, 1) + t * Vector3(0.5f, 0.7f, 1.0f);
 }
 
-Vector3 Color(const Ray& r, HitTable& world)
+Vector3 Color(const Ray& r, const HitTable& world)
 {	
 	HitRecord rec;
 	if(world.Hit(r, 0, (std::numeric_limits<float>::max)(), rec))
@@ -47,6 +48,41 @@ Vector3 Color(const Ray& r, HitTable& world)
 		float t = 0.5f * (unitDirection.Y() + 1.0f);
 		return (1.0f - t) * Vector3(1, 1, 1) + t * Vector3(0.5f, 0.7f, 1.0f);
 	}
+}
+
+void FillPixels(int beginX, int endX, int beginY, int endY, uint8_t* pixels, const HitTableList& world)
+{
+	Vector3 lowerLeft{ -2,-1,-1 };
+	Vector3 horizontal{ 4,0,0 };
+	Vector3 vertical{ 0,2,0 };
+	Vector3 origin{ 0,0,0 };
+	const int x = 2000;
+	const int y = 1000;
+	
+	int index = 0;
+	for (int j = endY - 1; j >= beginY; --j)
+	{
+		for (int i = beginX; i < endX; ++i)
+		{
+			float u = float(i) / float(x);
+			float v = float(j) / float(y);
+
+			Ray r(origin, lowerLeft + u * horizontal + v * vertical);
+
+			Vector3 p = r.PointAtParameter(2.0f);
+
+			Vector3 col = Color(r, world);
+
+			int ir = int(255.99 * col[0]);
+			int ig = int(255.99 * col[1]);
+			int ib = int(255.99 * col[2]);
+
+			pixels[index++] = ir;
+			pixels[index++] = ig;
+			pixels[index++] = ib;
+		}
+	}
+
 }
 
 int main()
@@ -70,12 +106,23 @@ int main()
 		auto b = std::make_shared <Sphere>(Vector3(0, -100.5f, -1), 100.f);
 		std::vector<std::shared_ptr<HitTable>> list;
 		list.push_back(b);
-		list.push_back(a);
+		list.push_back(a);		
+
+		HitTableList world(list);
+
+		auto start = std::chrono::high_resolution_clock::now();
+
+		tbb::parallel_invoke(
+			[&pixels, &world]()
+			{
+				FillPixels(0, 1000, 0, 1000, pixels, world);
+			},
+			[&pixels, &world]()
+			{
+				FillPixels(1000, 2000, 0, 1000, pixels, world);
+			});
 		
-
-		HitTableList world(list);			
-
-		int index = 0;
+		/*int index = 0;
 		for(int j = y - 1; j>=0;--j)
 		{
 			for(int i = 0; i < x;++i)
@@ -98,9 +145,12 @@ int main()
 				pixels[index++] = ib;
 			}
 		}
-		
+		*/
 
-		
+		auto end = std::chrono::high_resolution_clock::now();
+
+		auto miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		std::cout << "Took : " << miliseconds.count() <<"(m"<< std::endl;
 
 		stbi_write_png("screenshot.png", x, y, 3, pixels, x * 3);
 	}

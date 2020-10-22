@@ -17,9 +17,12 @@ include_directories("inteltbb/tbb/include")
 include_directories("inteltbb/pstl/include")
 include_directories("inteltbb/pstl/stdlib")
 
+file(GLOB SOURCES "./*.cpp")
+file(GLOB HEADERS "./*.h")
+
 link_directories("inteltbb/tbb/lib/intel64_win/vc_mt")
 
-add_executable(CPURayTracing main.cpp Vector3.h Vector3.cpp Ray.h Ray.cpp)
+add_executable(CPURayTracing ${SOURCES} ${HEADERS})
 
 target_link_libraries(CPURayTracing tbb.lib tbbbind.lib tbbmalloc.lib tbbproxy.lib)
 target_compile_definitions(CPURayTracing PRIVATE STB_IMAGE_WRITE_IMPLEMENTATION)
