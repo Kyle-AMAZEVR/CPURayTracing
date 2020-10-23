@@ -65,6 +65,7 @@ public:
 	static const Vector3 UnitX;
 	static const Vector3 UnitY;
 	static const Vector3 UnitZ;
+	static const Vector3 Zero;
 protected:
 	__m128 mData;
 };

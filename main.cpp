@@ -56,10 +56,13 @@ void FillPixels(int beginX, int endX, int beginY, int endY, uint8_t* pixels, con
 	Vector3 horizontal{ 4,0,0 };
 	Vector3 vertical{ 0,2,0 };
 	Vector3 origin{ 0,0,0 };
+
 	const int x = 2000;
 	const int y = 1000;
+
+	// start index
+	int index = x * (y - endY) * 3;
 	
-	int index = 0;
 	for (int j = endY - 1; j >= beginY; --j)
 	{
 		for (int i = beginX; i < endX; ++i)
@@ -115,37 +118,12 @@ int main()
 		tbb::parallel_invoke(
 			[&pixels, &world]()
 			{
-				FillPixels(0, 1000, 0, 1000, pixels, world);
+				FillPixels(0, 2000, 0, 500, pixels, world);
 			},
 			[&pixels, &world]()
 			{
-				FillPixels(1000, 2000, 0, 1000, pixels, world);
-			});
-		
-		/*int index = 0;
-		for(int j = y - 1; j>=0;--j)
-		{
-			for(int i = 0; i < x;++i)
-			{
-				float u = float(i) / float(x);
-				float v = float(j) / float(y);
-
-				Ray r(origin, lowerLeft + u * horizontal + v * vertical);
-
-				Vector3 p = r.PointAtParameter(2.0f);
-
-				Vector3 col = Color(r, world);
-
-				int ir = int(255.99 * col[0]);
-				int ig = int(255.99 * col[1]);
-				int ib = int(255.99 * col[2]);
-
-				pixels[index++] = ir;
-				pixels[index++] = ig;
-				pixels[index++] = ib;
-			}
-		}
-		*/
+				FillPixels(0, 2000, 500, 1000, pixels, world);
+			});		
 
 		auto end = std::chrono::high_resolution_clock::now();
 
