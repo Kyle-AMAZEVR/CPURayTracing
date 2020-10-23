@@ -5,9 +5,11 @@
 //	This C++ code is licensed under the GNU General Public License Version 2.
 //	See the file COPYING.txt for the full license.
 
+#include <atomic>
 #include <vector>
 #include "Vector3.h"
 #include "Point2.h"
+#include "Point3.h"
 
 class Sampler
 {
@@ -52,10 +54,10 @@ public:
 	// get next sample on unit disk
 	Point2	SampleUnitDisk(void);
 
-	Vector3											// get next sample on unit hemisphere
+	Point3											// get next sample on unit hemisphere
 		SampleHemiSphere(void);
 
-	Vector3											// get next sample on unit sphere
+	Point3											// get next sample on unit sphere
 		SampleSphere(void);
 
 	Point2											// only used to set up a vector noise table
@@ -69,9 +71,9 @@ protected:
 	std::vector<Point2>			samples;				// sample points on a unit square
 	std::vector<int>				shuffled_indices;		// shuffled samples array indices
 	std::vector<Point2>			disk_samples;			// sample points on a unit disk
-	std::vector<Vector3> 		mHemisphereSamples;		// sample points on a unit hemisphere
-	std::vector<Vector3> 		mSphereSamples;			// sample points on a unit sphere
-	unsigned long 			count;					// the current number of sample points used
+	std::vector<Point3> 		mHemisphereSamples;		// sample points on a unit hemisphere
+	std::vector<Point3> 		mSphereSamples;			// sample points on a unit sphere
+	std::atomic<unsigned long>	count;					// the current number of sample points used
 	int 					jump;					// random index jump
 };
 

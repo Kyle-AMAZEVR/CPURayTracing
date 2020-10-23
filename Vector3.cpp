@@ -2,6 +2,12 @@
 #include "Vector3.h"
 #include <cmath>
 #include <immintrin.h>
+#include "Point3.h"
+
+Vector3::Vector3(const Point3& p)
+{
+	mData = _mm_setr_ps(p.X, p.Y, p.Z, 0);
+}
 
 Vector3::Vector3(float x, float y, float z)
 {
@@ -66,6 +72,16 @@ Vector3 Vector3::Normalized() const
 Vector3 operator+(const Vector3& a, const Vector3& b)
 {
 	return _mm_add_ps(a.mData, b.mData);
+}
+
+Vector3 operator+(const Vector3& a, const Point3& b)
+{
+	__m128 data;
+	data.m128_f32[0] = b.X;
+	data.m128_f32[1] = b.Y;
+	data.m128_f32[2] = b.Z;
+
+	return _mm_add_ps(a.mData, data);
 }
 
 Vector3 operator-(const Vector3& a, const Vector3& b)

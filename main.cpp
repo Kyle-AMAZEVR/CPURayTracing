@@ -11,7 +11,10 @@
 #include "Sphere.h"
 #include "stb_image_write.h"
 #include "HitTableList.h"
+#include "Hammersley.h"
 #include <chrono>
+
+#include "Regular.h"
 
 bool HitSphere(const Vector3& center, float radius, const Ray& r)
 {
@@ -50,6 +53,24 @@ Vector3 Color(const Ray& r, const HitTable& world)
 	}
 }
 
+Vector3 Color(const Ray& r, const HitTable& world, Sampler& sampler)
+{
+	HitRecord rec;
+	if (world.Hit(r, 0.01f, (std::numeric_limits<float>::max)(), rec))
+	{
+		Vector3 target = rec.P + rec.Normal + sampler.SampleSphere();
+		const Ray newRay{ rec.P, target - rec.P };
+		return 0.7f * Color(newRay, world, sampler);
+	}
+	else
+	{
+		Vector3 unitDirection = r.Direction().Normalized();
+		float t = 0.5f * (unitDirection.Y() + 1.0f);
+		return (1.0f - t) * Vector3(1, 1, 1) + t * Vector3(0.5f, 0.7f, 1.0f);
+	}
+}
+
+
 const float PI = 3.141592f;
 
 void SampleHemiSphere(const float e)
@@ -71,6 +92,9 @@ void FillPixels(int beginX, int endX, int beginY, int endY, uint8_t* pixels, con
 	const int x = 2000;
 	const int y = 1000;
 
+	Hammersley sampler(50);
+	sampler.MapSamplesToSphere();
+
 	// start index
 	int index = x * (y - endY) * 3;
 	
@@ -85,7 +109,7 @@ void FillPixels(int beginX, int endX, int beginY, int endY, uint8_t* pixels, con
 
 			Vector3 p = r.PointAtParameter(2.0f);
 
-			Vector3 col = Color(r, world);
+			Vector3 col = Color(r, world, sampler);
 
 			int ir = int(255.99 * col[0]);
 			int ig = int(255.99 * col[1]);
@@ -100,49 +124,45 @@ void FillPixels(int beginX, int endX, int beginY, int endY, uint8_t* pixels, con
 }
 
 int main()
-{	
-	std::ofstream out("Test.ppm");
+{
+	
+	int x = 2000;
+	int y = 1000;
 
-	if(out.good())
-	{
-		int x = 2000;
-		int y = 1000;
+	uint8_t* pixels = new uint8_t[x * y * 3];		
 
-		uint8_t* pixels = new uint8_t[x * y * 3];		
-
-		Vector3 lowerLeft{ -2,-1,-1 };
-		Vector3 horizontal{ 4,0,0 };
-		Vector3 vertical{ 0,2,0 };
-		Vector3 origin{ 0,0,0 };
+	Vector3 lowerLeft{ -2,-1,-1 };
+	Vector3 horizontal{ 4,0,0 };
+	Vector3 vertical{ 0,2,0 };
+	Vector3 origin{ 0,0,0 };
 
 
-		auto a = std::make_shared <Sphere>(Vector3(0, 0, -1), 0.5f);
-		auto b = std::make_shared <Sphere>(Vector3(0, -100.5f, -1), 100.f);
-		std::vector<std::shared_ptr<HitTable>> list;
-		list.push_back(b);
-		list.push_back(a);		
+	auto a = std::make_shared <Sphere>(Vector3(0, 0, -1), 0.5f);
+	auto b = std::make_shared <Sphere>(Vector3(0, -100.5f, -1), 100.f);
+	std::vector<std::shared_ptr<HitTable>> list;
+	list.push_back(b);
+	list.push_back(a);		
 
-		HitTableList world(list);
+	HitTableList world(list);
 
-		auto start = std::chrono::high_resolution_clock::now();
+	auto start = std::chrono::high_resolution_clock::now();
 
-		tbb::parallel_invoke(
-			[&pixels, &world]()
-			{
-				FillPixels(0, 2000, 0, 500, pixels, world);
-			},
-			[&pixels, &world]()
-			{
-				FillPixels(0, 2000, 500, 1000, pixels, world);
-			});		
+	tbb::parallel_invoke(
+		[&pixels, &world]()
+		{
+			FillPixels(0, 2000, 0, 500, pixels, world);
+		},
+		[&pixels, &world]()
+		{
+			FillPixels(0, 2000, 500, 1000, pixels, world);
+		});		
 
-		auto end = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
 
-		auto miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		std::cout << "Took : " << miliseconds.count() <<"(m"<< std::endl;
+	auto miliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+	std::cout << "Took : " << miliseconds.count() <<"(m"<< std::endl;
 
-		stbi_write_png("screenshot.png", x, y, 3, pixels, x * 3);
-	}
+	stbi_write_png("screenshot.png", x, y, 3, pixels, x * 3);
 
 	
 	return 0;

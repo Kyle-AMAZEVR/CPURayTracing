@@ -28,7 +28,7 @@ Sampler::Sampler(void)
 
 Sampler::Sampler(const int ns)
 	: num_samples(ns),
-	num_sets(1),
+	num_sets(83),
 	count(0),
 	jump(0)
 {
@@ -59,10 +59,12 @@ Sampler::Sampler(const Sampler& s)
 	shuffled_indices(s.shuffled_indices),
 	disk_samples(s.disk_samples),
 	mHemisphereSamples(s.mHemisphereSamples),
-	mSphereSamples(s.mSphereSamples),
-	count(s.count),
+	mSphereSamples(s.mSphereSamples),	
 	jump(s.jump)
-{}
+{
+	std::memory_order order = std::memory_order_seq_cst;
+	count = s.count.load(order);
+}
 
 
 // ------------------------------------------------------------------ assignment operator
@@ -78,9 +80,11 @@ Sampler& Sampler::operator= (const Sampler& rhs)
 	shuffled_indices = rhs.shuffled_indices;
 	disk_samples = rhs.disk_samples;
 	mHemisphereSamples = rhs.mHemisphereSamples;
-	mSphereSamples = rhs.mSphereSamples;
-	count = rhs.count;
+	mSphereSamples = rhs.mSphereSamples;	
 	jump = rhs.jump;
+
+	std::memory_order order = std::memory_order_seq_cst;
+	count = rhs.count.load(order);
 
 	return (*this);
 }
@@ -238,7 +242,7 @@ Sampler::MapSamplesToHemiSphere(const float exp)
 		float pu = sin_theta * cos_phi;
 		float pv = sin_theta * sin_phi;
 		float pw = cos_theta;
-		mHemisphereSamples.push_back(Vector3(pu, pv, pw));
+		mHemisphereSamples.push_back(Point3(pu, pv, pw));
 	}
 }
 
@@ -266,7 +270,7 @@ void Sampler::MapSamplesToSphere(void)
 		phi = TWO_PI * r2;
 		x = r * cos(phi);
 		y = r * sin(phi);
-		mSphereSamples.push_back(Vector3(x, y, z));
+		mSphereSamples.push_back(Point3(x, y, z));
 	}
 }
 
@@ -331,7 +335,7 @@ Sampler::SampleUnitDisk(void)
 
 // ------------------------------------------------------------------- SampleHemiSphere
 
-Vector3
+Point3
 Sampler::SampleHemiSphere(void)
 {
 	if (count % num_samples == 0)  									// start of a new pixel
@@ -344,7 +348,7 @@ Sampler::SampleHemiSphere(void)
 
 // ------------------------------------------------------------------- SampleSphere
 
-Vector3
+Point3
 Sampler::SampleSphere(void)
 {
 	if (count % num_samples == 0)  									// start of a new pixel
