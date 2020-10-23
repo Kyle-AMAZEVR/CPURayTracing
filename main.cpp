@@ -5,7 +5,7 @@
 #include <limits>
 #include <pstl/algorithm>
 #include <fstream>
-#include <cstddef>
+#include <cmath>
 #include "Vector3.h"
 #include "Ray.h"
 #include "Sphere.h"
@@ -47,6 +47,17 @@ Vector3 Color(const Ray& r, const HitTable& world)
 		Vector3 unitDirection = r.Direction().Normalized();
 		float t = 0.5f * (unitDirection.Y() + 1.0f);
 		return (1.0f - t) * Vector3(1, 1, 1) + t * Vector3(0.5f, 0.7f, 1.0f);
+	}
+}
+
+const float PI = 3.141592f;
+
+void SampleHemiSphere(const float e)
+{
+	int size = 100;
+	for(int i = 0; i < size;i++)
+	{
+		//float cosPhi = std::cos(2.0f * PI * samples[i])
 	}
 }
 

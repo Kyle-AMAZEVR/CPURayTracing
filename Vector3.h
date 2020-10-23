@@ -2,9 +2,6 @@
 
 
 #include <xmmintrin.h>
-#include <pmmintrin.h>
-#include <smmintrin.h>
-#include <mmintrin.h>
 #include <functional>
 
 class Vector3
