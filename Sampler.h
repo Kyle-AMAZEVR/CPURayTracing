@@ -1,15 +1,11 @@
 #pragma once
 
-
 // 	Copyright (C) Kevin Suffern 2000-2007.
 //	This C++ code is for non-commercial purposes only.
 //	This C++ code is licensed under the GNU General Public License Version 2.
 //	See the file COPYING.txt for the full license.
 
-
-
 #include <vector>
-#include "Vector2.h"
 #include "Vector3.h"
 #include "Point2.h"
 
@@ -30,43 +26,40 @@ public:
 
 	virtual ~Sampler(void);
 
-	void set_num_sets(const int np);
+	void SetNumSets(const int np);
 
-	virtual void generate_samples(void) = 0;
+	virtual void GenerateSamples(void) = 0;
 
-	int get_num_samples(void);
+	int GetNumSamples(void);
 
-	void shuffle_x_coordinates(void);
+	void ShuffleXCoordinates(void);
 
-	void shuffle_y_coordinates(void);
+	void ShuffleYCoordinates(void);
 
-	void setup_shuffled_indices(void);
+	void SetupShuffledIndices(void);
 
-	void map_samples_to_unit_disk(void);
+	void MapSamplesToUnitDisk(void);
 
-	void
-		map_samples_to_hemisphere(const float p);
+	void MapSamplesToHemiSphere(const float p);
 
-	void
-		map_samples_to_sphere(void);
-
+	void MapSamplesToSphere(void);
 
 	// the following functions are not const because they change count and jump
 
-	Vector2											// get next sample on unit square
-		sample_unit_square(void);
+	// get next sample on unit square
+	Point2	SampleUnitSquare(void);
 
-	Vector2											// get next sample on unit disk
-		sample_unit_disk(void);
+	// get next sample on unit disk
+	Point2	SampleUnitDisk(void);
 
 	Vector3											// get next sample on unit hemisphere
-		sample_hemisphere(void);
+		SampleHemiSphere(void);
 
 	Vector3											// get next sample on unit sphere
-		sample_sphere(void);
+		SampleSphere(void);
 
-	Vector2											// only used to set up a vector noise table
-		sample_one_set(void);							// this is not discussed in the book, but see the
+	Point2											// only used to set up a vector noise table
+		SampleOneSet(void);							// this is not discussed in the book, but see the
 														// file LatticeNoise.cpp in Chapter 31
 
 protected:
@@ -76,8 +69,8 @@ protected:
 	std::vector<Point2>			samples;				// sample points on a unit square
 	std::vector<int>				shuffled_indices;		// shuffled samples array indices
 	std::vector<Point2>			disk_samples;			// sample points on a unit disk
-	std::vector<Vector3> 		hemisphere_samples;		// sample points on a unit hemisphere
-	std::vector<Vector3> 		sphere_samples;			// sample points on a unit sphere
+	std::vector<Vector3> 		mHemisphereSamples;		// sample points on a unit hemisphere
+	std::vector<Vector3> 		mSphereSamples;			// sample points on a unit sphere
 	unsigned long 			count;					// the current number of sample points used
 	int 					jump;					// random index jump
 };

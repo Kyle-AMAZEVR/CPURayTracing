@@ -3,8 +3,13 @@
 //	This C++ code is licensed under the GNU General Public License Version 2.
 //	See the file COPYING.txt for the full license.
 
-#include <algorithm>   // for random_shuffle in Sampler::setup_shuffled_indices
+#include <algorithm>   // for random_shuffle in Sampler::SetupShuffledIndices
 #include "Sampler.h"
+#include <cstdlib>
+#include <random>
+
+const float PI = 3.14159265358979323846f;
+const float TWO_PI = (2.0f * PI);
 
 // ------------------------------------------------------------------ default constructor
 
@@ -12,9 +17,10 @@ Sampler::Sampler(void)
 	: num_samples(1),
 	num_sets(83),
 	count(0),
-	jump(0) {
+	jump(0)
+{
 	samples.reserve(num_samples * num_sets);
-	setup_shuffled_indices();
+	SetupShuffledIndices();
 }
 
 
@@ -22,11 +28,12 @@ Sampler::Sampler(void)
 
 Sampler::Sampler(const int ns)
 	: num_samples(ns),
-	num_sets(83),
+	num_sets(1),
 	count(0),
-	jump(0) {
+	jump(0)
+{
 	samples.reserve(num_samples * num_sets);
-	setup_shuffled_indices();
+	SetupShuffledIndices();
 }
 
 
@@ -36,9 +43,10 @@ Sampler::Sampler(const int ns, const int n_sets)
 	: num_samples(ns),
 	num_sets(n_sets),
 	count(0),
-	jump(0) {
+	jump(0)
+{
 	samples.reserve(num_samples * num_sets);
-	setup_shuffled_indices();
+	SetupShuffledIndices();
 }
 
 
@@ -50,8 +58,8 @@ Sampler::Sampler(const Sampler& s)
 	samples(s.samples),
 	shuffled_indices(s.shuffled_indices),
 	disk_samples(s.disk_samples),
-	hemisphere_samples(s.hemisphere_samples),
-	sphere_samples(s.sphere_samples),
+	mHemisphereSamples(s.mHemisphereSamples),
+	mSphereSamples(s.mSphereSamples),
 	count(s.count),
 	jump(s.jump)
 {}
@@ -59,8 +67,8 @@ Sampler::Sampler(const Sampler& s)
 
 // ------------------------------------------------------------------ assignment operator
 
-Sampler&
-Sampler::operator= (const Sampler& rhs) {
+Sampler& Sampler::operator= (const Sampler& rhs)
+{
 	if (this == &rhs)
 		return (*this);
 
@@ -69,8 +77,8 @@ Sampler::operator= (const Sampler& rhs) {
 	samples = rhs.samples;
 	shuffled_indices = rhs.shuffled_indices;
 	disk_samples = rhs.disk_samples;
-	hemisphere_samples = rhs.hemisphere_samples;
-	sphere_samples = rhs.sphere_samples;
+	mHemisphereSamples = rhs.mHemisphereSamples;
+	mSphereSamples = rhs.mSphereSamples;
 	count = rhs.count;
 	jump = rhs.jump;
 
@@ -80,65 +88,76 @@ Sampler::operator= (const Sampler& rhs) {
 Sampler::~Sampler(void) {}
 
 
-// ------------------------------------------------------------------- set_num_sets
+// ------------------------------------------------------------------- SetNumSets
 
-void
-Sampler::set_num_sets(const int np) {
+void Sampler::SetNumSets(const int np)
+{
 	num_sets = np;
 }
 
 
-// ------------------------------------------------------------------- get_num_samples
+// ------------------------------------------------------------------- GetNumSamples
 
-int
-Sampler::get_num_samples(void) {
+int Sampler::GetNumSamples(void)
+{
 	return (num_samples);
 }
 
 
-// ------------------------------------------------------------------- shuffle_x_coordinates
+// ------------------------------------------------------------------- ShuffleXCoordinates
 // shuffle the x coordinates of the points within each set
 
-void
-Sampler::shuffle_x_coordinates(void) {
+void Sampler::ShuffleXCoordinates(void)
+{
 	for (int p = 0; p < num_sets; p++)
-		for (int i = 0; i < num_samples - 1; i++) {
-			int target = rand_int() % num_samples + p * num_samples;
+	{
+		for (int i = 0; i < num_samples - 1; i++) 
+		{
+			int target = std::rand() % num_samples + p * num_samples;
 			float temp = samples[i + p * num_samples + 1].X;
 			samples[i + p * num_samples + 1].X = samples[target].X;
 			samples[target].X = temp;
 		}
+	}
 }
 
 
-// ------------------------------------------------------------------- shuffle_y_coordinates
+// ------------------------------------------------------------------- ShuffleYCoordinates
 // shuffle the y coordinates of the points within set
 
-void
-Sampler::shuffle_y_coordinates(void) {
+void Sampler::ShuffleYCoordinates(void)
+{
 	for (int p = 0; p < num_sets; p++)
-		for (int i = 0; i < num_samples - 1; i++) {
-			int target = rand_int() % num_samples + p * num_samples;
+	{
+		for (int i = 0; i < num_samples - 1; i++)
+		{
+			int target = std::rand() % num_samples + p * num_samples;
 			float temp = samples[i + p * num_samples + 1].Y;
 			samples[i + p * num_samples + 1].Y = samples[target].Y;
 			samples[target].Y = temp;
 		}
+	}
 }
 
 
-// ------------------------------------------------------------------- setup_shuffled_indices
+// ------------------------------------------------------------------- SetupShuffledIndices
 // sets up randomly shuffled indices for the samples array
 
 void
-Sampler::setup_shuffled_indices(void) {
+Sampler::SetupShuffledIndices(void)
+{
 	shuffled_indices.reserve(num_samples * num_sets);
 	std::vector<int> indices;
 
+	std::random_device rd;
+	std::mt19937 g(rd());
+	
 	for (int j = 0; j < num_samples; j++)
 		indices.push_back(j);
 
 	for (int p = 0; p < num_sets; p++) {
-		random_shuffle(indices.begin(), indices.end());
+		
+		std::shuffle(indices.begin(), indices.end(), g);
 
 		for (int j = 0; j < num_samples; j++)
 			shuffled_indices.push_back(indices[j]);
@@ -146,14 +165,14 @@ Sampler::setup_shuffled_indices(void) {
 }
 
 
-// ------------------------------------------------------------------- map_samples_to_unit_disk
+// ------------------------------------------------------------------- MapSamplesToUnitDisk
 
 // Maps the 2D sample points in the square [-1,1] X [-1,1] to a unit disk, using Peter Shirley's
 // concentric map function
 
-void
-Sampler::map_samples_to_unit_disk(void) {
-	int size = samples.size();
+void Sampler::MapSamplesToUnitDisk(void)
+{
+	auto size = samples.size();
 	float r, phi;		// polar coordinates
 	Point2 sp; 		// sample point on unit disk
 
@@ -162,8 +181,8 @@ Sampler::map_samples_to_unit_disk(void) {
 	for (int j = 0; j < size; j++) {
 		// map sample point to [-1, 1] X [-1,1]
 
-		sp.X = 2.0 * samples[j].X - 1.0;
-		sp.Y = 2.0 * samples[j].Y - 1.0;
+		sp.X = 2.0f * samples[j].X - 1.0f;
+		sp.Y = 2.0f * samples[j].Y - 1.0f;
 
 		if (sp.X > -sp.Y) {			// sectors 1 and 2
 			if (sp.X > sp.Y) {		// sector 1
@@ -199,17 +218,19 @@ Sampler::map_samples_to_unit_disk(void) {
 }
 
 
-// ------------------------------------------------------------------- map_samples_to_hemisphere
+// ------------------------------------------------------------------- MapSamplesToHemiSphere
 
 // Maps the 2D sample points to 3D points on a unit hemisphere with a cosine power
 // density distribution in the polar angle
 
 void
-Sampler::map_samples_to_hemisphere(const float exp) {
-	int size = samples.size();
-	hemisphere_samples.reserve(num_samples * num_sets);
+Sampler::MapSamplesToHemiSphere(const float exp)
+{
+	auto size = samples.size();
+	mHemisphereSamples.reserve(num_samples * num_sets);
 
-	for (int j = 0; j < size; j++) {
+	for (int j = 0; j < size; j++) 
+	{
 		float cos_phi = cos(2.0 * PI * samples[j].X);
 		float sin_phi = sin(2.0 * PI * samples[j].X);
 		float cos_theta = pow((1.0 - samples[j].Y), 1.0 / (exp + 1.0));
@@ -217,45 +238,46 @@ Sampler::map_samples_to_hemisphere(const float exp) {
 		float pu = sin_theta * cos_phi;
 		float pv = sin_theta * sin_phi;
 		float pw = cos_theta;
-		hemisphere_samples.push_back(Vector3(pu, pv, pw));
+		mHemisphereSamples.push_back(Vector3(pu, pv, pw));
 	}
 }
 
 
-// ------------------------------------------------------------------- map_samples_to_sphere
+// ------------------------------------------------------------------- MapSamplesToSphere
 
 // Maps the 2D sample points to 3D points on a unit sphere with a uniform density 
 // distribution over the surface
 // this is used for modelling a spherical light
 
-void
-Sampler::map_samples_to_sphere(void) {
+void Sampler::MapSamplesToSphere(void)
+{
 	float r1, r2;
 	float x, y, z;
 	float r, phi;
 
-	sphere_samples.reserve(num_samples * num_sets);
+	mSphereSamples.reserve(num_samples * num_sets);
 
-	for (int j = 0; j < num_samples * num_sets; j++) {
+	for (int j = 0; j < num_samples * num_sets; j++)
+	{
 		r1 = samples[j].X;
 		r2 = samples[j].Y;
-		z = 1.0 - 2.0 * r1;
+		z = 1.0f - 2.0f * r1;
 		r = sqrt(1.0 - z * z);
 		phi = TWO_PI * r2;
 		x = r * cos(phi);
 		y = r * sin(phi);
-		sphere_samples.push_back(Vector3(x, y, z));
+		mSphereSamples.push_back(Vector3(x, y, z));
 	}
 }
 
 
-// ------------------------------------------------------------------- sample_unit_square
+// ------------------------------------------------------------------- SampleUnitSquare
 // the final version in Listing 5.13
 
-Point2
-Sampler::sample_unit_square(void) {
+Point2 Sampler::SampleUnitSquare(void)
+{
 	if (count % num_samples == 0)  									// start of a new pixel
-		jump = (rand_int() % num_sets) * num_samples;				// random index jump initialised to zero in constructor
+		jump = (std::rand() % num_sets) * num_samples;				// random index jump initialised to zero in constructor
 
 	return (samples[jump + shuffled_indices[jump + count++ % num_samples]]);
 }
@@ -265,11 +287,11 @@ Sampler::sample_unit_square(void) {
 
 /*
 
-// ------------------------------------------------------------------- sample_unit_square
+// ------------------------------------------------------------------- SampleUnitSquare
 // the first revised version in Listing in Listing 5.8
 
 Point2
-Sampler::sample_unit_square(void) {
+Sampler::SampleUnitSquare(void) {
 	if (count % num_samples == 0)  									// start of a new pixel
 		jump = (rand_int() % num_sets) * num_samples;				// random index jump initialised to zero in constructor
 
@@ -282,11 +304,11 @@ Sampler::sample_unit_square(void) {
 
 /*
 
-// ------------------------------------------------------------------- sample_unit_square
+// ------------------------------------------------------------------- SampleUnitSquare
 // the original version in Listing 5.7
 
 Point2
-Sampler::sample_unit_square(void) {
+Sampler::SampleUnitSquare(void) {
 	return (samples[count++ % (num_samples * num_sets)]);
 }
 
@@ -294,48 +316,52 @@ Sampler::sample_unit_square(void) {
 
 
 
-// ------------------------------------------------------------------- sample_unit_disk
+// ------------------------------------------------------------------- SampleUnitDisk
 
 Point2
-Sampler::sample_unit_disk(void) {
+Sampler::SampleUnitDisk(void)
+{
 	if (count % num_samples == 0)  									// start of a new pixel
-		jump = (rand_int() % num_sets) * num_samples;
+		jump = (std::rand() % num_sets) * num_samples;
 
 	return (disk_samples[jump + shuffled_indices[jump + count++ % num_samples]]);
 }
 
 
 
-// ------------------------------------------------------------------- sample_hemisphere
+// ------------------------------------------------------------------- SampleHemiSphere
 
 Vector3
-Sampler::sample_hemisphere(void) {
+Sampler::SampleHemiSphere(void)
+{
 	if (count % num_samples == 0)  									// start of a new pixel
-		jump = (rand_int() % num_sets) * num_samples;
+		jump = (std::rand() % num_sets) * num_samples;
 
-	return (hemisphere_samples[jump + shuffled_indices[jump + count++ % num_samples]]);
+	return (mHemisphereSamples[jump + shuffled_indices[jump + count++ % num_samples]]);
 }
 
 
 
-// ------------------------------------------------------------------- sample_sphere
+// ------------------------------------------------------------------- SampleSphere
 
 Vector3
-Sampler::sample_sphere(void) {
+Sampler::SampleSphere(void)
+{
 	if (count % num_samples == 0)  									// start of a new pixel
-		jump = (rand_int() % num_sets) * num_samples;
+		jump = (std::rand() % num_sets) * num_samples;
 
-	return (sphere_samples[jump + shuffled_indices[jump + count++ % num_samples]]);
+	return (mSphereSamples[jump + shuffled_indices[jump + count++ % num_samples]]);
 }
 
 
 
-// ------------------------------------------------------------------- sample_one_set
+// ------------------------------------------------------------------- SampleOneSet
 // This is a specialised function called in LatticeNoise::init_vector_table
 // It doesn't shuffle the indices
 
 Point2
-Sampler::sample_one_set(void) {
+Sampler::SampleOneSet(void)
+{
 	return(samples[count++ % num_samples]);
 }
 
